@@ -27,18 +27,25 @@ export default {
         }
       })
 
-      const newHeaders = new Headers(response.headers)
+      // Buat headers baru yang bersih untuk menghindari tabrakan header biner (mencegah crash ERR_RESPONSE_HEADERS_MULTIPLE_CONTENT_DISPOSITION)
+      const newHeaders = new Headers()
       newHeaders.set('Access-Control-Allow-Origin', '*')
       newHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS')
       newHeaders.set('Access-Control-Allow-Headers', '*')
 
-      // Jika ada parameter nama file kustom dari frontend, gunakan penyaringan nama yang aman dari crash Chrome
+      // Hanya teruskan header esensial untuk pengunduhan file biner
+      const essentialHeaders = ['content-type', 'content-length', 'accept-ranges', 'content-range']
+      for (const h of essentialHeaders) {
+        const val = response.headers.get(h)
+        if (val) {
+          newHeaders.set(h, val)
+        }
+      }
+
+      // Injeksi nama file kustom "Kreaverse AI - Judul Asli" dengan standar RFC 5987 agar aman dari crash browser Chrome HP
       if (filename) {
         const cleanFilename = filename.replace(/[\r\n]+/g, ' ')
-        // Menyaring nama file dasar (ganti karakter non-ASCII dan spasi dengan underscore untuk fallback dasar)
         const safeAsciiFilename = cleanFilename.replace(/[^a-zA-Z0-9_\-\.]/g, '_')
-        
-        // RFC 5987 standar penulisan nama file aman dengan spasi untuk Chrome/Safari
         newHeaders.set('Content-Disposition', `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(cleanFilename)}`)
       }
 
