@@ -1,8 +1,8 @@
-// update proxy kreaverse
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     const targetUrl = url.searchParams.get('targetUrl')
+    const filename = url.searchParams.get('filename')
 
     if (!targetUrl) {
       return new Response('Missing targetUrl parameter', { status: 400 })
@@ -31,6 +31,13 @@ export default {
       newHeaders.set('Access-Control-Allow-Origin', '*')
       newHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS')
       newHeaders.set('Access-Control-Allow-Headers', '*')
+
+      // Jika ada parameter nama file kustom dari frontend, paksa browser menyimpannya sebagai file lampiran (attachment)
+      if (filename) {
+        // Bersihkan nama file dari karakter pemisah baris untuk alasan keamanan header
+        const cleanFilename = filename.replace(/[\r\n]+/g, ' ')
+        newHeaders.set('Content-Disposition', `attachment; filename="${cleanFilename}"; filename*=UTF-8''${encodeURIComponent(cleanFilename)}`)
+      }
 
       return new Response(response.body, {
         status: response.status,
