@@ -32,11 +32,14 @@ export default {
       newHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS')
       newHeaders.set('Access-Control-Allow-Headers', '*')
 
-      // Jika ada parameter nama file kustom dari frontend, paksa browser menyimpannya sebagai file lampiran (attachment)
+      // Jika ada parameter nama file kustom dari frontend, gunakan penyaringan nama yang aman dari crash Chrome
       if (filename) {
-        // Bersihkan nama file dari karakter pemisah baris untuk alasan keamanan header
         const cleanFilename = filename.replace(/[\r\n]+/g, ' ')
-        newHeaders.set('Content-Disposition', `attachment; filename="${cleanFilename}"; filename*=UTF-8''${encodeURIComponent(cleanFilename)}`)
+        // Menyaring nama file dasar (ganti karakter non-ASCII dan spasi dengan underscore untuk fallback dasar)
+        const safeAsciiFilename = cleanFilename.replace(/[^a-zA-Z0-9_\-\.]/g, '_')
+        
+        // RFC 5987 standar penulisan nama file aman dengan spasi untuk Chrome/Safari
+        newHeaders.set('Content-Disposition', `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(cleanFilename)}`)
       }
 
       return new Response(response.body, {
