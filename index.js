@@ -55,7 +55,14 @@ export default {
         headers: newHeaders
       })
     } catch (e) {
-      return new Response('Proxy Error: ' + e.message, { status: 500 })
+      return new Response('Proxy Error: ' + e.message, {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
+          'Access-Control-Allow-Headers': '*'
+        }
+      })
     }
   }
 }
